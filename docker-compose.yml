@@ -1,0 +1,22 @@
+services:
+  cdt-manager:
+    image: ghcr.io/alex950808/cdt-manager:latest
+    container_name: cdt-manager
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/data
+    environment:
+      - TZ=Asia/Shanghai
+      # 可选：API 鉴权 Token
+      # - CDTD_TOKEN=your_secret_token
+      # 可选：首次启动自动初始化管理员账户（密码不为空）
+      # - CDTD_ADMIN_USERNAME=admin
+      # - CDTD_ADMIN_PASSWORD=your_secure_password
+
+    # 若需要基于本地源码重新构建镜像，可取消注释以下内容：
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+

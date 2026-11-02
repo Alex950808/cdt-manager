@@ -1,0 +1,108 @@
+@import "tailwindcss";
+@import "@heroui/styles";
+
+:root,
+html.light {
+  --c-default-100: oklch(95% 0.004 286);
+  --c-default-200: oklch(89% 0.006 286);
+  --c-default-300: oklch(80% 0.008 286);
+  --c-default-400: oklch(60% 0.012 286);
+  --c-default-500: oklch(46% 0.015 286);
+  --c-default-600: oklch(30% 0.012 286);
+  --c-primary-100: oklch(92% 0.05 220);
+  --c-primary-500: oklch(55% 0.16 235);
+  --c-primary-600: oklch(48% 0.16 235);
+  --field-background: oklch(98.5% 0.002 286);
+  --field-border-width: 1px;
+  --field-border: oklch(86% 0.006 286);
+  --overlay: oklch(99.5% 0 0);
+}
+
+html.dark {
+  --c-default-100: oklch(22% 0.006 286);
+  --c-default-200: oklch(27% 0.006 286);
+  --c-default-300: oklch(34% 0.008 286);
+  --c-default-400: oklch(55% 0.012 286);
+  --c-default-500: oklch(70.5% 0.015 286);
+  --c-default-600: oklch(84% 0.01 286);
+  --c-primary-100: oklch(30% 0.06 220);
+  --c-primary-500: oklch(75% 0.15 215);
+  --c-primary-600: oklch(82% 0.14 210);
+  --field-background: oklch(15.5% 0.006 286);
+  --field-border-width: 1px;
+  --field-border: oklch(32% 0.008 286);
+  --overlay: oklch(19.5% 0.006 286);
+}
+
+@theme inline {
+  --radius-medium: var(--field-radius, 0.75rem);
+  --color-default-100: var(--c-default-100);
+  --color-default-200: var(--c-default-200);
+  --color-default-300: var(--c-default-300);
+  --color-default-400: var(--c-default-400);
+  --color-default-500: var(--c-default-500);
+  --color-default-600: var(--c-default-600);
+  --color-primary-100: var(--c-primary-100);
+  --color-primary-500: var(--c-primary-500);
+  --color-primary-600: var(--c-primary-600);
+}
+
+/* 避免弹窗内容未溢出时出现多余滚动条与灰字继承，并适配全面屏安全区 */
+.modal__dialog {
+  border: 1px solid var(--color-default-200);
+  margin-top: max(1rem, env(safe-area-inset-top));
+  margin-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+.drawer__dialog {
+  border-left: 1px solid var(--color-default-200);
+}
+.select__popover {
+  border: 1px solid var(--color-default-200);
+  max-height: 18rem;
+  z-index: 100;
+}
+
+/* 深色/浅色科技风基调：网格底纹 + 环境光 */
+html.light body,
+html:not(.dark) body {
+  background:
+    radial-gradient(1100px 500px at 85% -8%, rgba(14, 165, 233, .08), transparent 60%),
+    radial-gradient(900px 480px at -8% 108%, rgba(139, 92, 246, .06), transparent 55%),
+    var(--background);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+html.light body::before,
+html:not(.dark) body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(15, 23, 42, .04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 23, 42, .04) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: radial-gradient(ellipse at 50% 0%, rgba(0, 0, 0, .75), transparent 72%);
+}
+html.dark body {
+  background:
+    radial-gradient(1100px 500px at 85% -8%, rgba(34, 211, 238, .08), transparent 60%),
+    radial-gradient(900px 480px at -8% 108%, rgba(167, 139, 250, .07), transparent 55%),
+    var(--background);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+html.dark body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(148, 163, 184, .05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, .05) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: radial-gradient(ellipse at 50% 0%, rgba(0, 0, 0, .8), transparent 72%);
+}
+.num { font-variant-numeric: tabular-nums; font-family: var(--mono, ui-monospace, monospace); }
