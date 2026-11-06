@@ -100,7 +100,24 @@ const tgLimit = 4000 // Telegram 单条上限 4096，留余量
 
 var tagRe = regexp.MustCompile(`<[^>]+>`)
 
-func stripTags(s string) string { return tagRe.ReplaceAllString(s, "") }
+func stripTags(s string) string {
+	s = strings.ReplaceAll(s, "<br>", "\n")
+	s = strings.ReplaceAll(s, "<br/>", "\n")
+	s = strings.ReplaceAll(s, "<br />", "\n")
+	s = strings.ReplaceAll(s, "</p>", "\n")
+	return tagRe.ReplaceAllString(s, "")
+}
+
+func sanitizeTG(s string) string {
+	r := strings.NewReplacer(
+		"<br>", "\n",
+		"<br/>", "\n",
+		"<br />", "\n",
+		"</p>", "\n",
+		"<p>", "",
+	)
+	return r.Replace(s)
+}
 
 // clipTG 按行截断：直接切字符串会把 <b>/<code> 标签切成两半导致 Telegram 400。
 // 预算预留截断后缀的字节，保证截断后整体仍不超限。
@@ -148,9 +165,13 @@ func sendTelegram(ctx context.Context, cfg Config, msg Message) error {
 	}
 	url := strings.TrimRight(base, "/") + "/bot" + token + "/sendMessage"
 
+	tgText := sanitizeTG(msg.HTML)
+	if strings.TrimSpace(tgText) == "" {
+		tgText = msg.Text
+	}
 	payload := map[string]any{
 		"chat_id":                  chatID,
-		"text":                     clipTG(msg.HTML),
+		"text":                     clipTG(tgText),
 		"parse_mode":               "HTML",
 		"disable_web_page_preview": true,
 	}
@@ -262,13 +283,45 @@ func sendEmail(ctx context.Context, cfg Config, msg Message) error {
 	fromHdr := fmt.Sprintf("%s <%s>", mime.QEncoding.Encode("utf-8", brand), from)
 	headers := fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\n"+
 		"Content-Type: text/html; charset=\"utf-8\"\r\n\r\n", fromHdr, to, subject)
-	if _, err := w.Write([]byte(headers + msg.HTML)); err != nil {
+	if _, err := w.Write([]byte(headers + renderEmailHTML(brand, msg))); err != nil {
 		return err
 	}
 	if err := w.Close(); err != nil {
 		return err
 	}
 	return cl.Quit()
+}
+
+func renderEmailHTML(brand string, msg Message) string {
+	contentHTML := msg.HTML
+	if strings.TrimSpace(contentHTML) == "" {
+		contentHTML = "<pre style=\"font-family: inherit; margin: 0; white-space: pre-wrap;\">" + msg.Text + "</pre>"
+	} else {
+		contentHTML = strings.ReplaceAll(contentHTML, "\n", "<br>")
+	}
+
+	escBrand := strings.NewReplacer("&", "&amp;", "<", "&lt;", ">", "&gt;", "\"", "&quot;").Replace(brand)
+
+	return fmt.Sprintf(`<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:24px 12px;background-color:#f6f8fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#24292f;line-height:1.6;">
+  <div style="max-width:580px;margin:0 auto;background:#ffffff;border:1px solid #d0d7de;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+    <div style="background:#0969da;color:#ffffff;padding:16px 20px;font-size:16px;font-weight:600;">
+      %s
+    </div>
+    <div style="padding:24px 20px;font-size:14px;color:#1f2328;">
+      %s
+    </div>
+    <div style="background:#f6f8fa;border-top:1px solid #d0d7de;padding:12px 20px;font-size:12px;color:#656d76;text-align:center;">
+      本邮件由 %s 自动发送，请勿直接回复
+    </div>
+  </div>
+</body>
+</html>`, escBrand, contentHTML, escBrand)
 }
 
 // --- Webhook ------------------------------------------------------------------
